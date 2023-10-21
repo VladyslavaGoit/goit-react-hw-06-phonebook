@@ -1,32 +1,31 @@
-import { useState } from 'react';
-import { nanoid } from 'nanoid';
 import css from './ContactForm.module.css';
+import { useDispatch, useSelector } from 'react-redux';
+import { addContacts } from 'redux/contactsSlice';
+import { getContacts } from 'redux/selectors';
 
-const ContactForm = ({ onSubmit }) => {
-  const [name, setName] = useState('');
-  const [number, setNumber] = useState('');
-
-  const handleChange = evt => {
-    const { name, value } = evt.currentTarget;
-    switch (name) {
-      case 'name':
-        setName(value);
-        break;
-      case 'number':
-        setNumber(value);
-        break;
-
-      default:
-        break;
-    }
-  };
-
+const ContactForm = () => {
+  const dispatch = useDispatch();
+  const contacts = useSelector(getContacts);
   const handleSubmit = evt => {
     evt.preventDefault();
-    const id = nanoid();
-    onSubmit({ name, number, id });
-    setName('');
-    setNumber('');
+    const newName = evt.target.elements.name.value;
+    const newNumber = evt.target.elements.number.value;
+    const isSameContact = contacts.find(
+      ({ name, number }) =>
+        name.toLowerCase().trim() === newName.toLowerCase().trim() ||
+        number === newNumber
+    );
+    if (isSameContact) {
+      evt.target.reset();
+      return alert(`${newName} is already in contacts`);
+    }
+    dispatch(
+      addContacts({
+        name: newName,
+        number: newNumber,
+      })
+    );
+    evt.target.reset();
   };
 
   return (
@@ -36,8 +35,6 @@ const ContactForm = ({ onSubmit }) => {
         Name
         <input
           className={css.contactInput}
-          onChange={handleChange}
-          value={name}
           type="text"
           name="name"
           pattern="^[a-zA-Zа-яА-Я]+(([' \-][a-zA-Zа-яА-Я ])?[a-zA-Zа-яА-Я]*)*$"
@@ -49,8 +46,6 @@ const ContactForm = ({ onSubmit }) => {
         Number
         <input
           className={css.contactInput}
-          onChange={handleChange}
-          value={number}
           type="tel"
           name="number"
           pattern="\+?\d{1,4}?[ .\-\s]?\(?\d{1,3}?\)?[ .\-\s]?\d{1,4}[ .\-\s]?\d{1,4}[ .\-\s]?\d{1,9}"
